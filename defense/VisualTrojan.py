@@ -54,9 +54,11 @@ print(os.path.join(dataset_path, task, 'val', 'attack_specifications.pkl'))
 with open(os.path.join(dataset_path, task, 'val', 'attack_specifications.pkl'), 'rb') as f:
     attack_specifications = pickle.load(f)
 
+# need to replace your own paths
+trojan_model_dir = './XXXXX'
+clean_model_dir = './clean'
 
-trojan_model_dir = './test8'
-"""
+# ASR Detection
 def check_specifications(model_dir, attack_specifications):
     _, test_data, _ = utils.load_data('MNIST')
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=512, shuffle=False, pin_memory=True)
@@ -83,11 +85,8 @@ result, attack_success_rates = check_specifications(trojan_model_dir, attack_spe
 print('Passes test (mean ASR >= 97%):', result)
 print('Mean ASR: {:.1f}%'.format(100 * np.mean(attack_success_rates)))
 print('Std ASR: {:.1f}%'.format(100 * np.std(attack_success_rates)))
-"""
-#clean_model_dir = './evasive_dataset/reference_models'
-clean_model_dir = './clean'
 
-"""
+# ACC Detection
 def compute_accuracies(model_dir):
     _, test_data, _ = utils.load_data('MNIST')
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=512, shuffle=False, pin_memory=True)
@@ -111,8 +110,7 @@ labels = np.concatenate([np.ones(len(scores_trojan)), np.zeros(len(scores_clean)
 print(scores,labels)
 print('Accuracy-based detector AUROC: {:.1f}%'.format(100 * roc_auc_score(labels, scores)))
 
-"""
-
+# Specification Detection
 def compute_avg_posterior(loader, model, attack_specification=None):
 
     with torch.no_grad():
@@ -133,7 +131,6 @@ def compute_avg_posterior(loader, model, attack_specification=None):
 
 
 def compute_specificity_scores(model_dir):
-    print(model_dir)
     scores = []
 
     for model_idx in range(1):
@@ -166,26 +163,11 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=512, shuffle=Fal
 
 scores_trojan = compute_specificity_scores(trojan_model_dir)
 scores_clean = compute_specificity_scores(clean_model_dir)
-cnt=0
-my_dict={}
-for i in range(len(scores_clean)):
-    if scores_trojan[i]>scores_clean[i]:
-        cnt=cnt+1
-        print(i)
-    my_dict[i]=scores_trojan[i]-scores_clean[i]
-new_dict = sorted(my_dict.items(), key=lambda d: d[1], reverse=True)
-for i in range(len(scores_clean)):
-    print(new_dict[i],'\t',scores_trojan[new_dict[i][0]],scores_clean[new_dict[i][0]])
-    #print(i,scores_trojan[i]-scores_clean[i],'\t',scores_trojan[i],scores_clean[i])
-print(cnt)
-# %%
-
 scores = np.concatenate([scores_trojan, scores_clean])
 labels = np.concatenate([np.ones(len(scores_trojan)), np.zeros(len(scores_clean))])
-
 print('Specificity-based detector AUROC: {:.1f}%'.format(100 * roc_auc_score(labels, scores)))
 
-
+# MNTD Detection
 class NetworkDatasetDetection(torch.utils.data.Dataset):
     def __init__(self, trojan_model_dir, clean_model_dir):
         super().__init__()
